@@ -14,28 +14,31 @@ export type Package = PredicateType<typeof isPackage>;
 
 export async function installPackage(
   installer: Installer,
-  packageInfo: Package,
+  pkg: Package,
   rootDir: string,
-) {
-  const packagePath = getPackagePath(packageInfo, rootDir);
+): Promise<void> {
+  const packagePath = getPackagePath(pkg, rootDir);
   await fs.ensureDir(packagePath);
 
-  await makePackageJson(packageInfo, packagePath);
+  await makePackageJson(pkg, packagePath);
   await runInstall(installer, packagePath);
-  if (packageInfo.scripts?.build) {
+  if (pkg.scripts?.build) {
     await runBuild(installer, packagePath);
   }
 
   console.log(
-    `Installed ${packageInfo.name} to ${getSymlinkPath(packageInfo, rootDir)}`,
+    `Installed ${pkg.name} to ${getSymlinkPath(pkg, rootDir)}`,
   );
   await fs.ensureSymlink(
-    path.join(packagePath, packageInfo.binPath),
-    getSymlinkPath(packageInfo, rootDir),
+    path.join(packagePath, pkg.binPath),
+    getSymlinkPath(pkg, rootDir),
   );
 }
 
-async function runBuild(installer: Installer, packagePath: string) {
+async function runBuild(
+  installer: Installer,
+  packagePath: string,
+): Promise<void> {
   const command = new Deno.Command(installer, {
     args: ["run", "build"],
     cwd: packagePath,
@@ -48,7 +51,10 @@ async function runBuild(installer: Installer, packagePath: string) {
   }
 }
 
-async function runInstall(installer: Installer, packagePath: string) {
+async function runInstall(
+  installer: Installer,
+  packagePath: string,
+): Promise<void> {
   const command = new Deno.Command(installer, {
     args: ["install"],
     cwd: packagePath,
@@ -61,16 +67,19 @@ async function runInstall(installer: Installer, packagePath: string) {
   }
 }
 
-async function makePackageJson(info: Package, packagePath: string) {
-  const json_path = path.join(packagePath, "package.json");
-  await fs.ensureFile(json_path);
+async function makePackageJson(
+  pkg: Package,
+  packagePath: string,
+): Promise<void> {
+  const jsonPath = path.join(packagePath, "package.json");
+  await fs.ensureFile(jsonPath);
   await Deno.writeTextFile(
-    json_path,
+    jsonPath,
     JSON.stringify({
-      name: `@sepia/${info.name}`,
+      name: `@sepia/${pkg.name}`,
       version: "0.0.0",
-      dependencies: info.dependencies,
-      scripts: info.scripts,
+      dependencies: pkg.dependencies,
+      scripts: pkg.scripts,
     }),
   );
 }

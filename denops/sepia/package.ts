@@ -27,25 +27,25 @@ export const isPackageInfo = is.UnionOf([
 export type PackageInfo = PredicateType<typeof isPackageInfo>;
 
 export function getPackagePath(
-  info: PackageInfo["package"],
+  pkg: PackageInfo["package"],
   rootDir: string,
-) {
-  return path.join(rootDir, "packages", info.name);
+): string {
+  return path.join(rootDir, "packages", pkg.name);
 }
 
 export function getSymlinkPath(
   info: PackageInfo["package"],
   rootDir: string,
-) {
+): string {
   return path.join(rootDir, "bin", info.name);
 }
 
 const textDecoder = new TextDecoder();
-export function decodeText(text: Uint8Array) {
+export function decodeText(text: Uint8Array): string {
   return textDecoder.decode(text);
 }
 
-export async function downloadFile(url: string, dest: string) {
+export async function downloadFile(url: string, dest: string): Promise<void> {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download ${url}`);
@@ -58,7 +58,7 @@ export async function downloadFile(url: string, dest: string) {
 export async function installPackage(
   packageInfo: PackageInfo,
   options: Options,
-) {
+): Promise<void> {
   const { type, package: pkg } = packageInfo;
   switch (type) {
     case "bundler": {
@@ -91,7 +91,7 @@ export async function installPackage(
 export async function uninstallPackage(
   packageInfo: PackageInfo,
   options: Options,
-) {
+): Promise<void> {
   const { type, package: pkg } = packageInfo;
   switch (type) {
     case "bundler":

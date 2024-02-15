@@ -14,31 +14,31 @@ export const isPackage = is.ObjectOf({
 export type Package = PredicateType<typeof isPackage>;
 
 export async function installPackage(
-  packageInfo: Package,
+  pkg: Package,
   rootDir: string,
-) {
-  const packagePath = getPackagePath(packageInfo, rootDir);
+): Promise<void> {
+  const packagePath = getPackagePath(pkg, rootDir);
   await fs.ensureDir(packagePath);
 
-  if (/\.zip$/.test(packageInfo.url) === false) {
+  if (/\.zip$/.test(pkg.url) === false) {
     throw new Error(
-      `Invalid package url (must be a zip file extension): ${packageInfo.url}`,
+      `Invalid package url (must be a zip file extension): ${pkg.url}`,
     );
   }
   const zipFilePath = path.join(packagePath, "package.zip");
-  await downloadFile(packageInfo.url, zipFilePath);
+  await downloadFile(pkg.url, zipFilePath);
   await unzip_od(zipFilePath, path.join(packagePath, "content"));
 
   console.log(
-    `Installed ${packageInfo.name} to ${getSymlinkPath(packageInfo, rootDir)}`,
+    `Installed ${pkg.name} to ${getSymlinkPath(pkg, rootDir)}`,
   );
   await fs.ensureSymlink(
-    path.join(packagePath, packageInfo.binPath),
-    getSymlinkPath(packageInfo, rootDir),
+    path.join(packagePath, pkg.binPath),
+    getSymlinkPath(pkg, rootDir),
   );
 }
 
-async function unzip_od(zipPath: string, dist: string) {
+async function unzip_od(zipPath: string, dist: string): Promise<void> {
   await fs.ensureDir(dist);
   const command = new Deno.Command("unzip", {
     args: ["-o", zipPath, "-d", dist],
