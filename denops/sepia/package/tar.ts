@@ -1,9 +1,9 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
 import {
-  decode_text,
-  download_file,
-  get_package_path,
-  get_symlink_path,
+  decodeText,
+  downloadFile,
+  getPackagePath,
+  getSymlinkPath,
 } from "../package.ts";
 
 export const isPackage = is.ObjectOf({
@@ -13,11 +13,11 @@ export const isPackage = is.ObjectOf({
 });
 export type Package = PredicateType<typeof isPackage>;
 
-export async function install_package(
+export async function installPackage(
   packageInfo: Package,
   rootDir: string,
 ) {
-  const packagePath = get_package_path(packageInfo, rootDir);
+  const packagePath = getPackagePath(packageInfo, rootDir);
   await fs.ensureDir(packagePath);
 
   // Check if the package url is a tar file.
@@ -29,17 +29,15 @@ export async function install_package(
     );
   }
   const tarFilePath = path.join(packagePath, "package.tar");
-  await download_file(packageInfo.url, tarFilePath);
+  await downloadFile(packageInfo.url, tarFilePath);
   await tar_xvf(tarFilePath, path.join(packagePath, "content"));
 
   console.log(
-    `Installed ${packageInfo.name} to ${
-      get_symlink_path(packageInfo, rootDir)
-    }`,
+    `Installed ${packageInfo.name} to ${getSymlinkPath(packageInfo, rootDir)}`,
   );
   await fs.ensureSymlink(
     path.join(packagePath, "content", packageInfo.binPath),
-    get_symlink_path(packageInfo, rootDir),
+    getSymlinkPath(packageInfo, rootDir),
   );
 }
 
@@ -51,8 +49,8 @@ async function tar_xvf(tarPath: string, dist: string) {
   });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
-    console.log(decode_text(stdout));
-    console.error(decode_text(stderr));
+    console.log(decodeText(stdout));
+    console.error(decodeText(stderr));
     throw new Error("Failed to build package");
   }
 }

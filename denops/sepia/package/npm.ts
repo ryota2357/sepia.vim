@@ -1,5 +1,5 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
-import { decode_text, get_package_path, get_symlink_path } from "../package.ts";
+import { decodeText, getPackagePath, getSymlinkPath } from "../package.ts";
 
 const isInstaller = is.LiteralOneOf(["npm", "pnpm", "yarn"]);
 export type Installer = PredicateType<typeof isInstaller>;
@@ -12,58 +12,56 @@ export const isPackage = is.ObjectOf({
 });
 export type Package = PredicateType<typeof isPackage>;
 
-export async function install_package(
+export async function installPackage(
   installer: Installer,
   packageInfo: Package,
   rootDir: string,
 ) {
-  const packagePath = get_package_path(packageInfo, rootDir);
+  const packagePath = getPackagePath(packageInfo, rootDir);
   await fs.ensureDir(packagePath);
 
-  await make_package_json(packageInfo, packagePath);
-  await run_install(installer, packagePath);
+  await makePackageJson(packageInfo, packagePath);
+  await runInstall(installer, packagePath);
   if (packageInfo.scripts?.build) {
-    await run_build(installer, packagePath);
+    await runBuild(installer, packagePath);
   }
 
   console.log(
-    `Installed ${packageInfo.name} to ${
-      get_symlink_path(packageInfo, rootDir)
-    }`,
+    `Installed ${packageInfo.name} to ${getSymlinkPath(packageInfo, rootDir)}`,
   );
   await fs.ensureSymlink(
     path.join(packagePath, packageInfo.binPath),
-    get_symlink_path(packageInfo, rootDir),
+    getSymlinkPath(packageInfo, rootDir),
   );
 }
 
-async function run_build(installer: Installer, packagePath: string) {
+async function runBuild(installer: Installer, packagePath: string) {
   const command = new Deno.Command(installer, {
     args: ["run", "build"],
     cwd: packagePath,
   });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
-    console.log(decode_text(stdout));
-    console.error(decode_text(stderr));
+    console.log(decodeText(stdout));
+    console.error(decodeText(stderr));
     throw new Error("Failed to build package");
   }
 }
 
-async function run_install(installer: Installer, packagePath: string) {
+async function runInstall(installer: Installer, packagePath: string) {
   const command = new Deno.Command(installer, {
     args: ["install"],
     cwd: packagePath,
   });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
-    console.log(decode_text(stdout));
-    console.error(decode_text(stderr));
+    console.log(decodeText(stdout));
+    console.error(decodeText(stderr));
     throw new Error("Failed to install package");
   }
 }
 
-async function make_package_json(info: Package, packagePath: string) {
+async function makePackageJson(info: Package, packagePath: string) {
   const json_path = path.join(packagePath, "package.json");
   await fs.ensureFile(json_path);
   await Deno.writeTextFile(

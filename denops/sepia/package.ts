@@ -21,14 +21,14 @@ export const isPackageInfo = is.UnionOf([
 ]);
 export type PackageInfo = PredicateType<typeof isPackageInfo>;
 
-export function get_package_path(
+export function getPackagePath(
   info: PackageInfo["package"],
   rootDir: string,
 ) {
   return path.join(rootDir, "packages", info.name);
 }
 
-export function get_symlink_path(
+export function getSymlinkPath(
   info: PackageInfo["package"],
   rootDir: string,
 ) {
@@ -36,11 +36,11 @@ export function get_symlink_path(
 }
 
 const textDecoder = new TextDecoder();
-export function decode_text(text: Uint8Array) {
+export function decodeText(text: Uint8Array) {
   return textDecoder.decode(text);
 }
 
-export async function download_file(url: string, dest: string) {
+export async function downloadFile(url: string, dest: string) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download ${url}`);
@@ -50,14 +50,14 @@ export async function download_file(url: string, dest: string) {
   await Deno.writeFile(dest, content);
 }
 
-export async function install_package(
+export async function installPackage(
   packageInfo: PackageInfo,
   options: Options,
 ) {
   const { type, package: pkg } = packageInfo;
   switch (type) {
     case "npm": {
-      await npm.install_package(
+      await npm.installPackage(
         options.npmInstaller,
         packageInfo.package,
         options.installRootDir,
@@ -65,11 +65,11 @@ export async function install_package(
       return;
     }
     case "tar": {
-      await tar.install_package(pkg, options.installRootDir);
+      await tar.installPackage(pkg, options.installRootDir);
       return;
     }
     case "zip": {
-      await zip.install_package(pkg, options.installRootDir);
+      await zip.installPackage(pkg, options.installRootDir);
       return;
     }
     default: {
@@ -79,7 +79,7 @@ export async function install_package(
   }
 }
 
-export async function uninstall_package(
+export async function uninstallPackage(
   packageInfo: PackageInfo,
   options: Options,
 ) {
@@ -89,7 +89,7 @@ export async function uninstall_package(
     case "tar":
     case "zip": {
       const remove_package_dir = (async () => {
-        const packagePath = get_package_path(pkg, options.installRootDir);
+        const packagePath = getPackagePath(pkg, options.installRootDir);
         try {
           await Deno.remove(packagePath, { recursive: true });
         } catch (e) {
@@ -99,7 +99,7 @@ export async function uninstall_package(
         }
       })();
       const remove_symlink = (async () => {
-        const linkPath = get_symlink_path(pkg, options.installRootDir);
+        const linkPath = getSymlinkPath(pkg, options.installRootDir);
         try {
           await Deno.remove(linkPath);
         } catch (e) {
