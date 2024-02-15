@@ -1,4 +1,13 @@
 function! sepia#setup(options = {}) abort
+  if !exists('g:sepia#_options')
+    let g:sepia#_options = #{
+      \   install_root_dir: has('nvim') ? stdpath('data') . '/sepia' : fnamemodify('~/.local/share/vim/sepia', ':p'),
+      \   npm_installer: "npm",
+      \   max_concurrency: 4,
+      \   path_location: "prepend",
+      \ }
+  endif
+
   for k in keys(a:options)
     if !has_key(g:sepia#_options, k)
       echoerr '[sepia] Option ' .. k .. ' is not supported'
@@ -11,6 +20,9 @@ function! sepia#setup(options = {}) abort
 endfunction
 
 function! sepia#register(...) abort
+  if !exists("g:sepia#_all_package_info")
+    let g:sepia#_all_package_info = {}
+  endif
   for pkg_info in a:000
     let l:name = pkg_info.package.name
     if has_key(g:sepia#_all_package_info, l:name)

@@ -19,7 +19,10 @@ const isOptions = is.ObjectOf({
 export type Options = SnakeToCamel<PredicateType<typeof isOptions>>;
 
 export async function getOptions(denops: Denops): Promise<Options> {
-  const options = await globals.get(denops, "sepia#_options");
+  const options = await globals.get(denops, "sepia#_options", undefined);
+  if (options === undefined) {
+    throw new Error("Options is not set");
+  }
   const o = ensure(options, isOptions);
   return {
     installRootDir: o.install_root_dir,
