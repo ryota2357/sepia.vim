@@ -4,11 +4,15 @@
 ---@field public max_concurrency? number
 ---@field public path_location? "prepend" | "append" | "skip"
 
----@alias sepia.PackageInfo sepia.NpmPackageInfo | sepia.ZipPackageInfo | sepia.TarPackageInfo
+---@alias sepia.PackageInfo sepia.BundlerPackageInfo | sepia.NpmPackageInfo | sepia.ZipPackageInfo | sepia.TarPackageInfo
 
 ---@class sepia.package.BasePackage
 ---@field public name string
 ---@field public binPath string
+
+---@alias sepia.BundlerPackageInfo { type: "bundler", package: sepia.package.BundlerPackage }
+---@class sepia.package.BundlerPackage : sepia.package.BasePackage
+---@field public gems (string | string[])[]
 
 ---@alias sepia.NpmPackageInfo { type: "npm", package: sepia.package.NpmPackage }
 ---@class sepia.package.NpmPackage : sepia.package.BasePackage

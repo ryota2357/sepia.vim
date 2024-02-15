@@ -1,11 +1,16 @@
 import { fs, is, path, PredicateType } from "./deps.ts";
 import { Options } from "./options.ts";
 
+import * as bundler from "./package/bundler.ts";
 import * as npm from "./package/npm.ts";
 import * as tar from "./package/tar.ts";
 import * as zip from "./package/zip.ts";
 
 export const isPackageInfo = is.UnionOf([
+  is.ObjectOf({
+    type: is.LiteralOf("bundler"),
+    package: bundler.isPackage,
+  }),
   is.ObjectOf({
     type: is.LiteralOf("npm"),
     package: npm.isPackage,
@@ -56,6 +61,10 @@ export async function installPackage(
 ) {
   const { type, package: pkg } = packageInfo;
   switch (type) {
+    case "bundler": {
+      await bundler.installPackage(pkg, options.installRootDir);
+      return;
+    }
     case "npm": {
       await npm.installPackage(
         options.npmInstaller,
@@ -85,6 +94,7 @@ export async function uninstallPackage(
 ) {
   const { type, package: pkg } = packageInfo;
   switch (type) {
+    case "bundler":
     case "npm":
     case "tar":
     case "zip": {

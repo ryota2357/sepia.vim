@@ -34,7 +34,24 @@ end
 ---@return nil
 function M.register(...)
     for _, info in ipairs({ ... }) do
-        if info.type == "npm" then
+        if info.type == "bundler" then
+            vim.validate({
+                ["package"] = { info.package, "table" },
+                ["package.name"] = { info.package.name, "string" },
+                ["package.binPath"] = { info.package.binPath, "string" },
+                ["package.gems"] = {
+                    info.package.gems,
+                    function(v)
+                        if type(v) ~= "table" then return false end
+                        return vim.iter(v):all(function(x)
+                            return (type(x) == "string")
+                                or (type(x) == "table" and #x == 2 and type(x[1]) == "string" and type(x[2]) == "string")
+                        end)
+                    end,
+                    [[string | {string, string}]]
+                }
+            })
+        elseif info.type == "npm" then
             vim.validate({
                 ["package"] = { info.package, "table" },
                 ["package.name"] = { info.package.name, "string" },
