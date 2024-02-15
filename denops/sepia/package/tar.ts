@@ -32,9 +32,6 @@ export async function installPackage(
   await downloadFile(pkg.url, tarFilePath);
   await tar_xvf(tarFilePath, path.join(packagePath, "content"));
 
-  console.log(
-    `Installed ${pkg.name} to ${getSymlinkPath(pkg, rootDir)}`,
-  );
   await fs.ensureSymlink(
     path.join(packagePath, "content", pkg.binPath),
     getSymlinkPath(pkg, rootDir),

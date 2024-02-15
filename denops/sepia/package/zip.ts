@@ -29,9 +29,6 @@ export async function installPackage(
   await downloadFile(pkg.url, zipFilePath);
   await unzip_od(zipFilePath, path.join(packagePath, "content"));
 
-  console.log(
-    `Installed ${pkg.name} to ${getSymlinkPath(pkg, rootDir)}`,
-  );
   await fs.ensureSymlink(
     path.join(packagePath, pkg.binPath),
     getSymlinkPath(pkg, rootDir),

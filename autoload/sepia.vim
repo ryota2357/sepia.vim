@@ -10,7 +10,7 @@ function! sepia#setup(options = {}) abort
 
   for k in keys(a:options)
     if !has_key(g:sepia#_options, k)
-      echoerr '[sepia] Option ' .. k .. ' is not supported'
+      call sepia#internal#notify_warn('Option ' .. k .. ' is not supported')
     endif
     let g:sepia#_options[k] = a:options[k]
   endfor
@@ -26,7 +26,7 @@ function! sepia#register(...) abort
   for pkg_info in a:000
     let l:name = pkg_info.package.name
     if has_key(g:sepia#_all_package_info, l:name)
-      echoerr '[sepia] Package ' .. l:name .. 'is already registered so it will be overwritten'
+      call sepia#internal#notify_warn('Package ' .. l:name .. 'is already registered so it will be overwritten')
     endif
     let g:sepia#_all_package_info[l:name] = pkg_info
   endfor
@@ -57,7 +57,7 @@ endfunction
 function! s:get_package_info(name) abort
   let l:pkg_info = get(g:sepia#_all_package_info, a:name, {})
   if l:pkg_info ==# {}
-    echoerr '[sepia] Package ' .. a:name .. 'is not registered'
+    call sepia#internal#notify_error('Package ' .. a:name .. 'is not registered')
   endif
   return l:pkg_info
 endfunction
@@ -71,6 +71,6 @@ function! s:set_PATH() abort
     let $PATH = $PATH . ':' . l:bin_path
   elseif l:path_location ==# 'skip'
   else
-    echoerr '[sepia] Option path_location must be one of prepend, append, or skip'
+    call sepia#internal#notify_error("Option path_location must be one of 'prepend', 'append', or 'skip'")
   endif
 endfunction

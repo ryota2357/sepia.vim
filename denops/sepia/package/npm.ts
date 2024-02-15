@@ -26,9 +26,6 @@ export async function installPackage(
     await runBuild(installer, packagePath);
   }
 
-  console.log(
-    `Installed ${pkg.name} to ${getSymlinkPath(pkg, rootDir)}`,
-  );
   await fs.ensureSymlink(
     path.join(packagePath, pkg.binPath),
     getSymlinkPath(pkg, rootDir),

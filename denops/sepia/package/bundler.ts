@@ -18,9 +18,6 @@ export async function installPackage(
   await makeGemfile(pkg, packagePath);
   await runInstall(packagePath);
 
-  console.log(
-    `Installed ${pkg.name} to ${getPackagePath(pkg, rootDir)}`,
-  );
   await fs.ensureSymlink(
     path.join(packagePath, pkg.binPath),
     getSymlinkPath(pkg, rootDir),
