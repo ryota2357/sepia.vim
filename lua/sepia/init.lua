@@ -51,6 +51,13 @@ function M.register(...)
                     [[string | {string, string}]]
                 }
             })
+        elseif info.type == "compressed" then
+            vim.validate({
+                ["package"] = { info.package, "table" },
+                ["package.name"] = { info.package.name, "string" },
+                ["package.binPath"] = { info.package.binPath, "string" },
+                ["package.url"] = { info.package.url, "string" }
+            })
         elseif info.type == "npm" then
             vim.validate({
                 ["package"] = { info.package, "table" },
@@ -58,13 +65,6 @@ function M.register(...)
                 ["package.binPath"] = { info.package.binPath, "string" },
                 ["package.dependencies"] = { info.package.dependencies, "table" },
                 ["package.scripts"] = { info.package.scripts, "table", true }
-            })
-        elseif info.type == "tar" or info.type == "zip" then
-            vim.validate({
-                ["package"] = { info.package, "table" },
-                ["package.name"] = { info.package.name, "string" },
-                ["package.binPath"] = { info.package.binPath, "string" },
-                ["package.url"] = { info.package.url, "string" }
             })
         else
             error("Invalid package type: " .. info.type)

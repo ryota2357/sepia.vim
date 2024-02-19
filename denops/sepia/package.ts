@@ -3,8 +3,7 @@ import { Options } from "./options.ts";
 
 import * as bundler from "./package/bundler.ts";
 import * as npm from "./package/npm.ts";
-import * as tar from "./package/tar.ts";
-import * as zip from "./package/zip.ts";
+import * as compressed from "./package/compressed.ts";
 
 export const isPackageInfo = is.UnionOf([
   is.ObjectOf({
@@ -16,12 +15,8 @@ export const isPackageInfo = is.UnionOf([
     package: npm.isPackage,
   }),
   is.ObjectOf({
-    type: is.LiteralOf("tar"),
-    package: tar.isPackage,
-  }),
-  is.ObjectOf({
-    type: is.LiteralOf("zip"),
-    package: zip.isPackage,
+    type: is.LiteralOf("compressed"),
+    package: compressed.isPackage,
   }),
 ]);
 export type PackageInfo = PredicateType<typeof isPackageInfo>;
@@ -65,20 +60,16 @@ export async function installPackage(
       await bundler.installPackage(pkg, options.installRootDir);
       return;
     }
+    case "compressed": {
+      await compressed.installPackage(pkg, options.installRootDir);
+      return;
+    }
     case "npm": {
       await npm.installPackage(
         options.npmInstaller,
         packageInfo.package,
         options.installRootDir,
       );
-      return;
-    }
-    case "tar": {
-      await tar.installPackage(pkg, options.installRootDir);
-      return;
-    }
-    case "zip": {
-      await zip.installPackage(pkg, options.installRootDir);
       return;
     }
     default: {
@@ -95,9 +86,8 @@ export async function uninstallPackage(
   const { type, package: pkg } = packageInfo;
   switch (type) {
     case "bundler":
-    case "npm":
-    case "tar":
-    case "zip": {
+    case "compressed":
+    case "npm": {
       const remove_package_dir = (async () => {
         const packagePath = getPackagePath(pkg, options.installRootDir);
         try {

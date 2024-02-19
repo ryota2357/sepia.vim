@@ -4,7 +4,7 @@
 ---@field public max_concurrency? number
 ---@field public path_location? "prepend" | "append" | "skip"
 
----@alias sepia.PackageInfo sepia.BundlerPackageInfo | sepia.NpmPackageInfo | sepia.ZipPackageInfo | sepia.TarPackageInfo
+---@alias sepia.PackageInfo sepia.BundlerPackageInfo | sepia.CompressedPackageInfo | sepia.NpmPackageInfo
 
 ---@class sepia.package.BasePackage
 ---@field public name string
@@ -14,15 +14,11 @@
 ---@class sepia.package.BundlerPackage : sepia.package.BasePackage
 ---@field public gems (string | string[])[]
 
+---@alias sepia.CompressedPackageInfo { type: "compressed", package: sepia.package.CompressedPackage }
+---@class sepia.package.CompressedPackage : sepia.package.BasePackage
+---@field public url string
+
 ---@alias sepia.NpmPackageInfo { type: "npm", package: sepia.package.NpmPackage }
 ---@class sepia.package.NpmPackage : sepia.package.BasePackage
 ---@field public dependencies table<string, string>
 ---@field public scripts? table<string, string>
-
----@alias sepia.TarPackageInfo { type: "tar", package: sepia.package.TarPackage }
----@class sepia.package.TarPackage : sepia.package.BasePackage
----@field public url string
-
----@alias sepia.ZipPackageInfo { type: "zip", package: sepia.package.ZipPackage }
----@class sepia.package.ZipPackage : sepia.package.BasePackage
----@field public url string
