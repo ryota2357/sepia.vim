@@ -1,18 +1,18 @@
 import { fs, is, path, PredicateType } from "./deps.ts";
 import { Options } from "./options.ts";
 
-import * as bundler from "./package/bundler.ts";
-import * as npm from "./package/npm.ts";
 import * as compressed from "./package/compressed.ts";
+import * as gem from "./package/gem.ts";
+import * as npm from "./package/npm.ts";
 
 export const isPackageInfo = is.UnionOf([
   is.ObjectOf({
-    type: is.LiteralOf("bundler"),
-    package: bundler.isPackage,
-  }),
-  is.ObjectOf({
     type: is.LiteralOf("npm"),
     package: npm.isPackage,
+  }),
+  is.ObjectOf({
+    type: is.LiteralOf("gem"),
+    package: gem.isPackage,
   }),
   is.ObjectOf({
     type: is.LiteralOf("compressed"),
@@ -47,8 +47,8 @@ export async function installPackage(
 
   const linkPath = await (async () => {
     switch (type) {
-      case "bundler": {
-        return await bundler.installPackage(pkg, options.installRootDir);
+      case "gem": {
+        return await gem.installPackage(pkg, packagePath);
       }
       case "compressed": {
         return await compressed.installPackage(pkg, packagePath);
@@ -76,8 +76,8 @@ export async function uninstallPackage(
 ): Promise<void> {
   const { type, package: pkg } = packageInfo;
   switch (type) {
-    case "bundler":
     case "compressed":
+    case "gem":
     case "npm": {
       const remove_package_dir = (async () => {
         const packagePath = getPackagePath(pkg, options.installRootDir);
