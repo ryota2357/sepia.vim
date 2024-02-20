@@ -1,5 +1,5 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
-import { decodeText, downloadFile } from "../package.ts";
+import { createBinWrapper, decodeText, downloadFile } from "../package.ts";
 
 export const isPackage = is.ObjectOf({
   name: is.String,
@@ -43,12 +43,16 @@ export async function installPackage(
     case "tar": {
       const contentDir = path.join(cwd, "content");
       await tar_xvf(compFilePath, contentDir);
-      return path.join(contentDir, pkg.binPath);
+      return createBinWrapper(cwd, path.join(contentDir, pkg.binPath), [
+        "#!/usr/bin/env bash",
+      ]);
     }
     case "zip": {
       const contentDir = path.join(cwd, "content");
       await unzip_od(compFilePath, contentDir);
-      return path.join(contentDir, pkg.binPath);
+      return createBinWrapper(cwd, path.join(contentDir, pkg.binPath), [
+        "#!/usr/bin/env bash",
+      ]);
     }
     case "gz": {
       const uncompressedPath = path.join(cwd, "package");

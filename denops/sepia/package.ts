@@ -36,6 +36,24 @@ export async function downloadFile(url: string, dest: string): Promise<void> {
   await Deno.writeFile(dest, content);
 }
 
+export async function createBinWrapper(
+  cwd: string,
+  binPath: string,
+  lines: string[],
+): Promise<string> {
+  if (!(await fs.exists(binPath))) {
+    throw new Error(`Binary not found: ${binPath}`);
+  }
+  const wrapperPath = path.join(cwd, "__sepia__", path.basename(binPath));
+  await fs.ensureFile(wrapperPath);
+  await Deno.writeTextFile(
+    wrapperPath,
+    [...lines, `exec ${binPath} "$@"`].join("\n"),
+    { mode: 0o755 },
+  );
+  return wrapperPath;
+}
+
 export async function installPackage(
   packageInfo: PackageInfo,
   options: Options,

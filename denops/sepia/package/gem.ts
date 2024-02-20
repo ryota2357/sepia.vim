@@ -1,5 +1,5 @@
-import { fs, is, path, PredicateType } from "../deps.ts";
-import { decodeText } from "../package.ts";
+import { is, path, PredicateType } from "../deps.ts";
+import { createBinWrapper, decodeText } from "../package.ts";
 
 export const isPackage = is.ObjectOf({
   name: is.String,
@@ -16,25 +16,10 @@ export async function installPackage(
     pkg.bin = pkg.name;
   }
   await runInstall(cwd, pkg);
-  const binWrapperPath = path.join(cwd, "__sepia__", pkg.bin);
-  await createBinWrapper(cwd, path.join(cwd, "bin", pkg.bin), binWrapperPath);
-  return binWrapperPath;
-}
-
-async function createBinWrapper(
-  cwd: string,
-  binPath: string,
-  wrapperPath: string,
-) {
-  if (!(await fs.exists(binPath))) {
-    throw new Error(`Binary not found: ${binPath}`);
-  }
-  const binWrapper = [
+  return createBinWrapper(cwd, path.join(cwd, "bin", pkg.bin), [
     "#!/usr/bin/env bash",
-    `GEM_HOME=${cwd} exec ${binPath} $@`,
-  ].join("\n");
-  await fs.ensureFile(wrapperPath);
-  await Deno.writeTextFile(wrapperPath, binWrapper, { mode: 0o755 });
+    `export GEM_HOME=${cwd}`,
+  ]);
 }
 
 async function runInstall(packagePath: string, pkg: Package): Promise<void> {
