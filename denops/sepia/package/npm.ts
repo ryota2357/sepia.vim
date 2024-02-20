@@ -1,5 +1,5 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
-import { decodeText, getPackagePath, getSymlinkPath } from "../package.ts";
+import { decodeText } from "../package.ts";
 
 const isInstaller = is.LiteralOneOf(["npm", "pnpm", "yarn"]);
 export type Installer = PredicateType<typeof isInstaller>;
@@ -13,33 +13,20 @@ export const isPackage = is.ObjectOf({
 export type Package = PredicateType<typeof isPackage>;
 
 export async function installPackage(
-  installer: Installer,
   pkg: Package,
-  rootDir: string,
-): Promise<void> {
-  const packagePath = getPackagePath(pkg, rootDir);
-  await fs.ensureDir(packagePath);
-
-  await makePackageJson(pkg, packagePath);
-  await runInstall(installer, packagePath);
+  cwd: string,
+  installer: Installer,
+): Promise<string> {
+  await makePackageJson(pkg, cwd);
+  await runInstall(installer, cwd);
   if (pkg.scripts?.build) {
-    await runBuild(installer, packagePath);
+    await runBuild(installer, cwd);
   }
-
-  await fs.ensureSymlink(
-    path.join(packagePath, pkg.binPath),
-    getSymlinkPath(pkg, rootDir),
-  );
+  return path.join(cwd, pkg.binPath);
 }
 
-async function runBuild(
-  installer: Installer,
-  packagePath: string,
-): Promise<void> {
-  const command = new Deno.Command(installer, {
-    args: ["run", "build"],
-    cwd: packagePath,
-  });
+async function runBuild(installer: Installer, cwd: string): Promise<void> {
+  const command = new Deno.Command(installer, { args: ["run", "build"], cwd });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
     console.log(decodeText(stdout));
@@ -48,14 +35,8 @@ async function runBuild(
   }
 }
 
-async function runInstall(
-  installer: Installer,
-  packagePath: string,
-): Promise<void> {
-  const command = new Deno.Command(installer, {
-    args: ["install"],
-    cwd: packagePath,
-  });
+async function runInstall(installer: Installer, cwd: string): Promise<void> {
+  const command = new Deno.Command(installer, { args: ["install"], cwd });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
     console.log(decodeText(stdout));
@@ -64,11 +45,8 @@ async function runInstall(
   }
 }
 
-async function makePackageJson(
-  pkg: Package,
-  packagePath: string,
-): Promise<void> {
-  const jsonPath = path.join(packagePath, "package.json");
+async function makePackageJson(pkg: Package, cwd: string): Promise<void> {
+  const jsonPath = path.join(cwd, "package.json");
   await fs.ensureFile(jsonPath);
   await Deno.writeTextFile(
     jsonPath,

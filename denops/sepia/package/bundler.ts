@@ -1,5 +1,5 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
-import { decodeText, getPackagePath, getSymlinkPath } from "../package.ts";
+import { decodeText } from "../package.ts";
 
 export const isPackage = is.ObjectOf({
   name: is.String,
@@ -10,25 +10,19 @@ export type Package = PredicateType<typeof isPackage>;
 
 export async function installPackage(
   pkg: Package,
-  rootDir: string,
-): Promise<void> {
-  const packagePath = getPackagePath(pkg, rootDir);
-  await fs.ensureDir(packagePath);
+  cwd: string,
+): Promise<string> {
+  await makeGemfile(pkg, cwd);
+  await runInstall(cwd);
 
-  await makeGemfile(pkg, packagePath);
-  await runInstall(packagePath);
-
-  await fs.ensureSymlink(
-    path.join(packagePath, pkg.binPath),
-    getSymlinkPath(pkg, rootDir),
-  );
+  return path.join(cwd, pkg.binPath);
 }
 
-async function runInstall(packagePath: string): Promise<void> {
+async function runInstall(cwd: string): Promise<void> {
   const command = new Deno.Command("bundle", {
     args: ["install"],
-    cwd: packagePath,
-    env: { GEM_HOME: packagePath },
+    cwd,
+    env: { GEM_HOME: cwd },
   });
   const { code, stdout, stderr } = await command.output();
   if (code !== 0) {
@@ -38,8 +32,8 @@ async function runInstall(packagePath: string): Promise<void> {
   }
 }
 
-async function makeGemfile(pkg: Package, packagePath: string): Promise<void> {
-  const gemfilePath = path.join(packagePath, "Gemfile");
+async function makeGemfile(pkg: Package, cwd: string): Promise<void> {
+  const gemfilePath = path.join(cwd, "Gemfile");
   await fs.ensureFile(gemfilePath);
   await Deno.writeTextFile(
     gemfilePath,

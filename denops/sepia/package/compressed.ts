@@ -1,10 +1,5 @@
 import { fs, is, path, PredicateType } from "../deps.ts";
-import {
-  decodeText,
-  downloadFile,
-  getPackagePath,
-  getSymlinkPath,
-} from "../package.ts";
+import { decodeText, downloadFile } from "../package.ts";
 
 export const isPackage = is.ObjectOf({
   name: is.String,
@@ -31,10 +26,9 @@ function getCompactedType(url: string): CompressedType | undefined {
 
 export async function installPackage(
   pkg: Package,
-  rootDir: string,
-): Promise<void> {
-  const packagePath = getPackagePath(pkg, rootDir);
-  await fs.ensureDir(packagePath);
+  cwd: string,
+): Promise<string> {
+  await fs.ensureDir(cwd);
 
   const compType = getCompactedType(pkg.url);
   if (!compType) {
@@ -42,36 +36,24 @@ export async function installPackage(
   }
 
   // NOTE: For tar files, we can use `package.tar` for all tar files because `tar -xvf` command automatically detects the compression type by the first few bytes of the file.
-  const compFilePath = path.join(packagePath, `package.${compType}`);
+  const compFilePath = path.join(cwd, `package.${compType}`);
   await downloadFile(pkg.url, compFilePath);
 
   switch (compType) {
     case "tar": {
-      const contentDir = path.join(packagePath, "content");
+      const contentDir = path.join(cwd, "content");
       await tar_xvf(compFilePath, contentDir);
-      await fs.ensureSymlink(
-        path.join(contentDir, pkg.binPath),
-        getSymlinkPath(pkg, rootDir),
-      );
-      break;
+      return path.join(contentDir, pkg.binPath);
     }
     case "zip": {
-      const contentDir = path.join(packagePath, "content");
+      const contentDir = path.join(cwd, "content");
       await unzip_od(compFilePath, contentDir);
-      await fs.ensureSymlink(
-        path.join(contentDir, pkg.binPath),
-        getSymlinkPath(pkg, rootDir),
-      );
-      break;
+      return path.join(contentDir, pkg.binPath);
     }
     case "gz": {
-      const uncompressedPath = path.join(packagePath, "package");
-      await gunzip(compFilePath, uncompressedPath);
-      await fs.ensureSymlink(
-        uncompressedPath,
-        getSymlinkPath(pkg, rootDir),
-      );
-      break;
+      const uncompressedPath = path.join(cwd, "package");
+      await gunzip_c(compFilePath, uncompressedPath);
+      return uncompressedPath;
     }
     default: {
       const unexpected: never = compType;
@@ -120,7 +102,7 @@ async function unzip_od(zipPath: string, dist: string): Promise<void> {
   }
 }
 
-async function gunzip(gzPath: string, dist: string): Promise<void> {
+async function gunzip_c(gzPath: string, dist: string): Promise<void> {
   const command = new Deno.Command("gunzip", {
     args: ["-c", gzPath],
     cwd: path.resolve(gzPath, "../"),

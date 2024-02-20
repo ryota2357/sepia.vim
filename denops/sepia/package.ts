@@ -21,20 +21,6 @@ export const isPackageInfo = is.UnionOf([
 ]);
 export type PackageInfo = PredicateType<typeof isPackageInfo>;
 
-export function getPackagePath(
-  pkg: PackageInfo["package"],
-  rootDir: string,
-): string {
-  return path.join(rootDir, "packages", pkg.name);
-}
-
-export function getSymlinkPath(
-  info: PackageInfo["package"],
-  rootDir: string,
-): string {
-  return path.join(rootDir, "bin", info.name);
-}
-
 const textDecoder = new TextDecoder();
 export function decodeText(text: Uint8Array): string {
   return textDecoder.decode(text);
@@ -55,28 +41,33 @@ export async function installPackage(
   options: Options,
 ): Promise<void> {
   const { type, package: pkg } = packageInfo;
-  switch (type) {
-    case "bundler": {
-      await bundler.installPackage(pkg, options.installRootDir);
-      return;
+
+  const packagePath = getPackagePath(pkg, options.installRootDir);
+  await fs.ensureDir(packagePath);
+
+  const linkPath = await (async () => {
+    switch (type) {
+      case "bundler": {
+        return await bundler.installPackage(pkg, options.installRootDir);
+      }
+      case "compressed": {
+        return await compressed.installPackage(pkg, packagePath);
+      }
+      case "npm": {
+        return await npm.installPackage(
+          pkg,
+          packagePath,
+          options.npmInstaller,
+        );
+      }
+      default: {
+        const unknownType: never = type;
+        throw new Error(`Unknown package type: ${unknownType}`);
+      }
     }
-    case "compressed": {
-      await compressed.installPackage(pkg, options.installRootDir);
-      return;
-    }
-    case "npm": {
-      await npm.installPackage(
-        options.npmInstaller,
-        packageInfo.package,
-        options.installRootDir,
-      );
-      return;
-    }
-    default: {
-      const unknownType: never = type;
-      throw new Error(`Unknown package type: ${unknownType}`);
-    }
-  }
+  })();
+
+  await fs.ensureSymlink(linkPath, getSymlinkPath(pkg, options.installRootDir));
 }
 
 export async function uninstallPackage(
@@ -116,4 +107,18 @@ export async function uninstallPackage(
       throw new Error(`Unknown package type: ${unknownType}`);
     }
   }
+}
+
+function getPackagePath(
+  pkg: PackageInfo["package"],
+  rootDir: string,
+): string {
+  return path.join(rootDir, "packages", pkg.name);
+}
+
+function getSymlinkPath(
+  info: PackageInfo["package"],
+  rootDir: string,
+): string {
+  return path.join(rootDir, "bin", info.name);
 }
