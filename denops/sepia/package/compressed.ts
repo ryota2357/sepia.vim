@@ -128,7 +128,7 @@ async function gunzip(gzPath: string, dist: string): Promise<void> {
   const { code, stdout, stderr } = await command.output();
   if (code === 0) {
     await fs.ensureFile(dist);
-    await Deno.writeFile(dist, stdout);
+    await Deno.writeFile(dist, stdout, { mode: 0o755 }); // rwxr-xr-x
   } else {
     console.error(decodeText(stderr));
     throw new Error(
