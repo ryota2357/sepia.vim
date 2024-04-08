@@ -41,6 +41,12 @@ function M.register(...)
                 ["package.binPath"] = { info.package.binPath, "string" },
                 ["package.url"] = { info.package.url, "string" }
             })
+        elseif info.type == "file" then
+            vim.validate({
+                ["package"] = { info.package, "table" },
+                ["package.name"] = { info.package.name, "string" },
+                ["package.url"] = { info.package.url, "string" }
+            })
         elseif info.type == "gem" then
             vim.validate({
                 ["package"] = { info.package, "table" },

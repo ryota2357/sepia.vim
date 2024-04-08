@@ -2,6 +2,7 @@ import { fs, is, path, PredicateType } from "./deps.ts";
 import { Options } from "./options.ts";
 
 import * as compressed from "./package/compressed.ts";
+import * as file from "./package/file.ts";
 import * as gem from "./package/gem.ts";
 import * as npm from "./package/npm.ts";
 
@@ -13,6 +14,10 @@ export const isPackageInfo = is.UnionOf([
   is.ObjectOf({
     type: is.LiteralOf("gem"),
     package: gem.isPackage,
+  }),
+  is.ObjectOf({
+    type: is.LiteralOf("file"),
+    package: file.isPackage,
   }),
   is.ObjectOf({
     type: is.LiteralOf("compressed"),
@@ -78,6 +83,12 @@ export async function installPackage(
           options.npmInstaller,
         );
       }
+      case "file": {
+        return await file.installPackage(
+          pkg,
+          packagePath,
+        );
+      }
       default: {
         const unknownType: never = type;
         throw new Error(`Unknown package type: ${unknownType}`);
@@ -96,6 +107,7 @@ export async function uninstallPackage(
   switch (type) {
     case "compressed":
     case "gem":
+    case "file":
     case "npm": {
       const remove_package_dir = (async () => {
         const packagePath = getPackagePath(pkg, options.installRootDir);

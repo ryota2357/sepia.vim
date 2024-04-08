@@ -13,6 +13,10 @@
 ---@class sepia.package.CompressedPackage : sepia.package.BasePackage
 ---@field public binPath string
 ---@field public url string
+---
+---@alias sepia.File { type: "file", package: sepia.package.File }
+---@class sepia.package.File : sepia.package.BasePackage
+---@field public url string
 
 ---@alias sepia.GemPackageInfo { type: "bundler", package: sepia.package.GemPackage }
 ---@class sepia.package.GemPackage : sepia.package.BasePackage
