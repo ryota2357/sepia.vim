@@ -57,7 +57,7 @@ endfunction
 function! s:get_package_info(name) abort
   let l:pkg_info = get(g:sepia#_all_package_info, a:name, {})
   if l:pkg_info ==# {}
-    call sepia#internal#notify_error('Package ' .. a:name .. 'is not registered')
+    call sepia#internal#notify_error('Package ' .. a:name .. ' is not registered')
   endif
   return l:pkg_info
 endfunction
