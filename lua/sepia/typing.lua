@@ -4,7 +4,7 @@
 ---@field public max_concurrency? number
 ---@field public path_location? "prepend" | "append" | "skip"
 
----@alias sepia.PackageInfo sepia.CompressedPackageInfo | sepia.GemPackageInfo | sepia.NpmPackageInfo
+---@alias sepia.PackageInfo sepia.CompressedPackageInfo | sepia.FilePackageInfo | sepia.GemPackageInfo | sepia.NpmPackageInfo
 
 ---@class sepia.package.BasePackage
 ---@field public name string
@@ -14,11 +14,11 @@
 ---@field public binPath string
 ---@field public url string
 ---
----@alias sepia.File { type: "file", package: sepia.package.File }
+---@alias sepia.FilePackageInfo { type: "file", package: sepia.package.File }
 ---@class sepia.package.File : sepia.package.BasePackage
 ---@field public url string
 
----@alias sepia.GemPackageInfo { type: "bundler", package: sepia.package.GemPackage }
+---@alias sepia.GemPackageInfo { type: "gem", package: sepia.package.GemPackage }
 ---@class sepia.package.GemPackage : sepia.package.BasePackage
 ---@field public bin string?
 ---@field public version string
